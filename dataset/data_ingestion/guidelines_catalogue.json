@@ -1,0 +1,25 @@
+{
+    "guidelines": [
+      {
+        "title": "NICE Guideline CG113: Generalised anxiety disorder and panic disorder in adults (management)",
+        "url": "https://www.nice.org.uk/guidance/cg113/resources/generalised-anxiety-disorder-and-panic-disorder-in-adults-management-pdf-35109387756997",
+        "source": "NICE",
+        "year": 2011,
+        "disease": "GAD, Panic Disorder"
+      },
+      {
+        "title": "NICE CG159: Social Anxiety Disorder",
+        "url": "https://www.nice.org.uk/guidance/cg159/resources/social-anxiety-disorder-recognition-assessment-and-treatment-pdf-35109639699397",
+        "source": "NICE",
+        "year": 2013,
+        "disease": "Social Anxiety Disorder"
+      },
+      {
+        "title": "WHO mhGAP Intervention Guide v2.0",
+        "url": "https://iris.who.int/bitstream/handle/10665/250239/9789241549790-eng.pdf",
+        "source": "WHO",
+        "year": 2017,
+        "disease": "Anxiety Disorders (primary care)"
+      }
+    ]
+  }

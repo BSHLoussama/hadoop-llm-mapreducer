@@ -13,3 +13,4 @@ Thumbs.db
 
 # Ignore other files
 bio_qa.py
+test_mongoDB.py

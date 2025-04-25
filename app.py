@@ -1,27 +1,72 @@
 # app.py - FastAPI backend with HDFS integration and Python path fixes
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import subprocess
-import os
+import time
 import json
 import tempfile
-import sys
 from datetime import datetime
+from functools import lru_cache
 import logging
+import os
+import sys
 
+
+if hasattr(sys.stdout, "reconfigure"):
+    # Python 3.7+ on Windows
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+else:
+    # fallback for older versions – set the PYTHONUTF8 env var
+    os.environ["PYTHONUTF8"] = "1"
+
+
+# Optional LangChain / Ollama imports
+try:
+    from langchain_ollama import OllamaLLM
+    from langchain_core.prompts import PromptTemplate
+    from langchain_core.runnables import RunnableLambda
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from pymongo import MongoClient
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
+    from langchain_community.tools import DuckDuckGoSearchRun
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+
+# create and check the dir results
+# Define the directory name
+results_dir = "results"
+
+# Check and create if it doesn't exist
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
+    print(f"Created directory: {results_dir}")
+else:
+    print(f"Directory already exists: {results_dir}")
+    
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("anxiety_qa")
 
-app = FastAPI(title="Biomedical MapReduce QA System")
+app = FastAPI(title="Anxiety QA Platform")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
+)
 
+
+# ── Data Models ───────────────────────────────────────────────────────────
 class Question(BaseModel):
     text: str
-    dataset_path: str = "/user/oussama/biomedical_abstracts.json"  # HDFS path
+    dataset_path: str = "/user/oussama/anxiety_papers.json"  # HDFS path
 
 class Answer(BaseModel):
     question: str
@@ -29,26 +74,76 @@ class Answer(BaseModel):
     processing_time: float
     date: str
 
+class JobResult(BaseModel):
+    question: str
+    answer: str
+    source: str
+    status: str
+    processing_time: float
+    date: str
+    
 # Store recent job results
 job_results: Dict[str, Dict[str, Any]] = {}
 
-@app.post("/submit_question/", response_model=Dict[str, str])
-async def submit_question(question: Question, background_tasks: BackgroundTasks):
-    """Submit a question for processing with Hadoop/PySpark"""
-    job_id = f"job_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+# ── LLM & Synthesiser ─────────────────────────────────────────────────────
+if not LANGCHAIN_AVAILABLE:
+    logger.warning("LangChain/Ollama unavailable: LLM features disabled.")
 
-    logger.info(f"Submitting job {job_id} with question: {question.text}")
-    logger.info(f"Dataset path: {question.dataset_path}")
+LLM = OllamaLLM(model="llama3.2:1b", temperature=0.0) if LANGCHAIN_AVAILABLE else None
 
-    # Schedule the job to run in the background
-    background_tasks.add_task(
-        run_mapreduce_job,
-        job_id=job_id,
-        question=question.text,
-        dataset_path=question.dataset_path
+_SYNTH_PROMPT = PromptTemplate(
+    input_variables=["partials"],
+    template=(
+        "You are a medical synthesis expert.\n"
+        "Combine these partial answers into one coherent, structured reply.\n"
+        "Remove duplicates, resolve minor conflicts, organize logically.\n\n"
+        "{partials}\n\n"
+        "Final Answer:"
+    )
+)
+
+# Create the synthesis chain using LCEL if LangChain is available
+synth_chain = (_SYNTH_PROMPT | LLM) if LANGCHAIN_AVAILABLE else None
+
+
+# ── NET via DuckDuckGo ───────────────────────────────────────────────────
+net_tool = DuckDuckGoSearchRun() if LANGCHAIN_AVAILABLE else None
+
+_NET_PROMPT = PromptTemplate(
+    input_variables=["question", "snips"],
+    template=(
+        "Using these web snippets, answer the question succinctly.\n\n"
+        "Question: {question}\n\n"
+        "Snippets:\n{snips}\n\n"
+        "Answer:"
+    )
+)
+
+# LCEL-based chain
+net_chain = (_NET_PROMPT | LLM) if LANGCHAIN_AVAILABLE else None
+
+def process_net(q: str) -> str:
+    if not LANGCHAIN_AVAILABLE:
+        return "Web search unavailable."
+    
+    try:
+        res = net_tool.run(q + " anxiety")
+    except Exception as e:
+        logger.warning("Web search failed: %s", e)
+        return "Web search unavailable."
+
+    # Format the snippets
+    snips = res if isinstance(res, str) else "\n".join(
+        f"{r.get('title', '')} – {r.get('snippet', '')}" for r in res[:8]
     )
 
-    return {"job_id": job_id, "status": "submitted"}
+    # Run the LLM pipeline
+    try:
+        return net_chain.invoke({"question": q, "snips": snips})
+    except Exception as e:
+        logger.error("Net chain error: %s", e)
+        return "Failed to generate web-based answer."
+# __ MapReduce+LLMs ________________________________________________________
 
 def run_mapreduce_job(job_id: str, question: str, dataset_path: str):
     """Run the PySpark job to process data from HDFS"""
@@ -73,7 +168,7 @@ def run_mapreduce_job(job_id: str, question: str, dataset_path: str):
 
         # Get the current working directory for script path resolution
         current_dir = os.getcwd()
-        script_path = os.path.join(current_dir, "bio_qa_langchain.py")
+        script_path = os.path.join(current_dir, "anxiety_qa_langchain.py")
 
         # Ensure Hadoop and Spark binaries are in the PATH
         if "bin" not in env.get("PATH", ""):
@@ -146,7 +241,7 @@ def run_mapreduce_job(job_id: str, question: str, dataset_path: str):
         processing_time = (end_time - start_time).total_seconds()
 
         # Check for results file
-        result_path = f"results_{job_id}.json"
+        result_path = f"results/results_{job_id}.json"
         if os.path.exists(result_path):
             logger.info(f"Results file found: {result_path}")
 
@@ -170,7 +265,7 @@ def run_mapreduce_job(job_id: str, question: str, dataset_path: str):
             # Fallback to simulated response
             job_results[job_id] = {
                 "question": question,
-                "answer": "This is a simulated answer about genetic mutations and their impact on cellular functions. The mutations affect signaling pathways and protein interactions.",
+                "answer": "This is a simulated answer about anxiety and its impact on mental and physical health. Anxiety can affect brain chemistry, influence thought patterns, and trigger physical responses such as increased heart rate and muscle tension.",
                 "processing_time": processing_time,
                 "date": start_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "status": "simulated"  # Indicate this is a fallback
@@ -190,6 +285,139 @@ def run_mapreduce_job(job_id: str, question: str, dataset_path: str):
         }
 
         print(f"Job failed: {str(e)}")
+
+def process_papers(job_id: str, question: str, dataset_path: str) -> str:
+    """
+    Synchronously run the existing run_mapreduce_job (which will
+    populate job_results[job_id]) and then pull back the answer.
+    """
+    # Call your existing orchestration in-process
+    run_mapreduce_job(job_id, question, dataset_path)
+
+    # Now the job_results dict must contain an entry for job_id
+    result = job_results.get(job_id, {})
+    # Return the answer (or a fallback if something went wrong)
+    return result.get("answer", "No answer generated")
+
+# ── Routing ───────────────────────────────────────────────────────────────
+_ROUTER_PROMPT = PromptTemplate(
+    input_variables=["question"],
+    template=(
+        "You are a routing assistant. Select a comma-separated subset of: "
+        "PAPERS, GUIDELINES, NET\nReturn only the list, no extra text.\n\n"
+        "Question: {question}\nAnswer:"
+    )
+)
+
+router_chain = (_ROUTER_PROMPT | LLM) if LANGCHAIN_AVAILABLE else None
+
+def choose_sources(question: str) -> List[str]:
+    if LANGCHAIN_AVAILABLE and router_chain is not None:
+        try:
+            out = router_chain.invoke({"question": question})
+            picks = [x.strip().lower() for x in out.split(",")]
+            valid = [x for x in picks if x in {"papers", "guidelines", "net"}]
+            if valid:
+                return valid
+        except Exception as e:
+            logger.warning("Router chain failed: %s", e)
+
+    # Heuristic fallback
+    low = question.lower()
+    heur = set()
+    if "guideline" in low or "recommend" in low:
+        heur.add("guidelines")
+    if "internet" in low or "website" in low or "online" in low:
+        heur.add("net")
+    return list(heur or {"papers"})
+
+
+# ── MongoDB & Guidelines (Vector Only) ────────────────────────────────────
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+mongo_cli = MongoClient(MONGO_URI)
+mongo_col = mongo_cli["anxiety"]["guidelines"]
+EMBED_MODEL = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+) if LANGCHAIN_AVAILABLE else None
+
+@lru_cache()
+def get_guidelines_index() -> FAISS:
+    docs: List[Document] = []
+    for d in mongo_col.find(
+        {"doc_level": "child"}, {"text":1, "parent_id":1, "title":1, "_id":0}
+    ):
+        docs.append(Document(
+            page_content=d["text"],
+            metadata={"parent_id": d["parent_id"], "title": d["title"]}
+        ))
+    return FAISS.from_documents(docs, EMBED_MODEL)
+
+def process_guidelines(q: str) -> str:
+    """Top-5 FAISS vector search over guideline snippets."""
+    if not LANGCHAIN_AVAILABLE:
+        return "Guidelines processing unavailable."
+    idx = get_guidelines_index()
+    hits = idx.similarity_search(q, k=5)
+    if not hits:
+        return "No relevant guidelines found."
+    snippets = []
+    for doc in hits:
+        title = doc.metadata.get("title", "Untitled")
+        txt   = doc.page_content[:1000].strip().replace("\n"," ")
+        snippets.append(f"## {title}\n{txt}…")
+    return "\n\n".join(snippets)
+
+
+
+# ── Worker & Endpoints ────────────────────────────────────────────────────
+def worker(job_id: str, question: str, data_path: str):
+    t0 = time.time()
+    parts: List[str] = []
+
+    for src in choose_sources(question):
+        if src == "guidelines":
+            parts.append("[GUIDELINES]\n" + process_guidelines(question))
+            
+        elif src == "net":
+            parts.append("[NET]\n" + process_net(question))
+        else:  # "papers"
+            # This will synchronously run spark/HDFS and populate job_results[job_id]
+            ans = process_papers(job_id, question, data_path)
+            parts.append("[PAPERS]\n" + ans)
+
+    # Combine or pass through
+    if len(parts) == 1:
+        final = parts[0].split("]\n", 1)[1]
+    else:
+        combined = "\n\n".join(parts)
+        final = (
+            synth_chain.invoke({"partials": combined})
+            if LANGCHAIN_AVAILABLE
+            else combined
+        )
+
+    # Overwrite job_results[job_id] with our final synthesized result
+    job_results[job_id] = JobResult(
+        question=question,
+        answer=final,
+        source=",".join(choose_sources(question)),
+        status="completed",
+        processing_time=time.time() - t0,
+        date=datetime.utcnow().isoformat()
+    ).model_dump()
+
+    logger.info("Job %s done in %.2f s", job_id, time.time() - t0)
+    
+    
+@app.post("/submit_question/", response_model=Dict[str, str])
+async def submit_question(q: Question, background_tasks: BackgroundTasks):
+    job_id = f"job_{int(time.time() * 1000)}"
+    # mark it as running immediately
+    job_results[job_id] = {"status": "running", "question": q.text}
+    # schedule our unified worker
+    background_tasks.add_task(worker, job_id, q.text, q.dataset_path)
+    return {"job_id": job_id, "status": "submitted"}
+
 
 @app.get("/job_status/{job_id}")
 async def get_job_status(job_id: str):
@@ -220,7 +448,7 @@ async def get_dataset_info():
         hdfs_cmd = os.path.join(hadoop_home, "bin", "hdfs.cmd")
 
         # Check if file exists
-        cmd = [hdfs_cmd, "dfs", "-ls", "/user/oussama/biomedical_abstracts.json"]
+        cmd = [hdfs_cmd, "dfs", "-ls", "/user/oussama/anxiety_papers.json"]
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -243,7 +471,7 @@ async def get_dataset_info():
                 "size_formatted": f"{file_size / 1024:.2f} KB" if file_size < 1024*1024 else f"{file_size / (1024*1024):.2f} MB",
                 "last_modified": last_modified,
                 "format": "JSON",
-                "location": "/user/oussama/biomedical_abstracts.json",
+                "location": "/user/oussama/anxiety_papers.json",
                 "source": "HDFS"
             }
         else:
@@ -251,7 +479,7 @@ async def get_dataset_info():
                 "exists": False,
                 "error": stderr if stderr else "File not found in HDFS",
                 "format": "Unknown",
-                "location": "/user/oussama/biomedical_abstracts.json",
+                "location": "/user/oussama/anxiety_papers.json",
                 "note": "Dataset might not be uploaded to HDFS yet"
             }
     except Exception as e:
