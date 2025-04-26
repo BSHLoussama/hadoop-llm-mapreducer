@@ -16,7 +16,11 @@ import json
 import argparse
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional
+
+# Load environment variables from .env
+load_dotenv()
 
 if hasattr(sys.stdout, "reconfigure"):
     # Python 3.7+ on Windows
@@ -41,6 +45,7 @@ logger = logging.getLogger("AnxietyQA")
 # -----------------------------------------------------------------------------
 try:
     from langchain_ollama import OllamaLLM
+    from langchain_openai import ChatOpenAI
     from langchain.prompts import PromptTemplate
     from langchain_core.runnables import RunnableLambda
     LANGCHAIN_AVAILABLE = True
@@ -155,24 +160,32 @@ def generate_answer(question: str, abstracts: List[Dict[str, Any]]) -> str:
     # Attempt LLM generation
     if LANGCHAIN_AVAILABLE:
         try:
-            template = (
-                "You are an anxiety research assistant. "
-                "Answer the question using ONLY the provided abstracts.\n\n"
-                "Extract key findings from this excerpt that answer the question.\n"
-                "Bullet‑point them; do NOT hallucinate.\n\n"
+            template=(
+                "You are an expert anxiety research assistant. Use ONLY the provided abstracts "
+                "to answer the question. Do NOT hallucinate or add external content.\n\n"
+                "Rules:\n"
+                "1. If an abstract doesn’t cover a point, say:\n"
+                "   \"I don't know based on provided abstracts.\"\n"
+                "2. Structure your response:\n"
+                "   1) Step-by-step reasoning: identify which abstracts are relevant\n"
+                "   2) Bullet-point key findings, each tagged with the abstract title in brackets\n"
+                "   3) A final concise answer paragraph\n\n"
                 "Question: {question}\n\n"
-                "Abstracts:\n{abstracts}\n\n"
-                "Answer:"
+                "Abstracts (top 5):\n"
+                "{abstracts}\n\n"
+                "Begin your reasoning:"
             )
             prompt = PromptTemplate(
                 input_variables=["question", "abstracts"],
                 template=template
             )
-            llm = OllamaLLM(model="llama3.2:1b", temperature=0.1)
+            # llm = OllamaLLM(model="llama3.2:1b", temperature=0.1)
+            # Then you can just do
+            llm = ChatOpenAI(model="gpt-3.5-turbo") 
             chain = prompt | llm
             response = chain.invoke({"question": question, "abstracts": context})
             logger.info("Answer generated via LLM.")
-            return response.strip()
+            return response.content.strip()
         except Exception as e:
             logger.error("LLM generation failed: %s", e)
 
