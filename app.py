@@ -26,6 +26,7 @@ else:
 # Optional LangChain / Ollama imports
 try:
     from langchain_ollama import OllamaLLM
+    from langchain_openai import ChatOpenAI
     from langchain_core.prompts import PromptTemplate
     from langchain_core.runnables import RunnableLambda
     from langchain_huggingface import HuggingFaceEmbeddings
@@ -33,6 +34,8 @@ try:
     from langchain_community.vectorstores import FAISS
     from langchain_core.documents import Document
     from langchain_community.tools import DuckDuckGoSearchRun
+    from dotenv import load_dotenv
+
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -62,7 +65,8 @@ app.add_middleware(
     allow_methods=["*"], allow_headers=["*"],
 )
 
-
+# Load environment variables from .env
+load_dotenv()
 # ── Data Models ───────────────────────────────────────────────────────────
 class Question(BaseModel):
     text: str
@@ -89,16 +93,26 @@ job_results: Dict[str, Dict[str, Any]] = {}
 if not LANGCHAIN_AVAILABLE:
     logger.warning("LangChain/Ollama unavailable: LLM features disabled.")
 
-LLM = OllamaLLM(model="llama3.2:1b", temperature=0.0) if LANGCHAIN_AVAILABLE else None
+# LLM = OllamaLLM(model="llama3.2:1b", temperature=0.0) if LANGCHAIN_AVAILABLE else None
+LLM = ChatOpenAI(model="gpt-3.5-turbo")  if LANGCHAIN_AVAILABLE else None
 
 _SYNTH_PROMPT = PromptTemplate(
     input_variables=["partials"],
     template=(
-        "You are a medical synthesis expert.\n"
-        "Combine these partial answers into one coherent, structured reply.\n"
-        "Remove duplicates, resolve minor conflicts, organize logically.\n\n"
+        "You are a medical synthesis expert. Combine these partial answers "
+        "into one coherent, structured reply.\n\n"
+        "Rules:\n"
+        "1. Use ONLY the provided content; do NOT hallucinate or add new information.\n"
+        "2. If a part of the question isn’t covered, state exactly:\n"
+        "   \"I don't know based on current data.\"\n"
+        "3. Cite each fact with its source tag in square brackets: [PAPERS], [GUIDELINES], [NET].\n"
+        "4. Think step-by-step:\n"
+        "   a. Identify key findings in each partial.\n"
+        "   b. Organize findings into logical sections with headers.\n"
+        "   c. Draft the final answer, embedding citations.\n\n"
+        "Partial answers:\n"
         "{partials}\n\n"
-        "Final Answer:"
+        "Begin your step-by-step reasoning:"
     )
 )
 
@@ -112,10 +126,20 @@ net_tool = DuckDuckGoSearchRun() if LANGCHAIN_AVAILABLE else None
 _NET_PROMPT = PromptTemplate(
     input_variables=["question", "snips"],
     template=(
-        "Using these web snippets, answer the question succinctly.\n\n"
+        "You are an expert researcher. Use ONLY the following web snippets "
+        "to answer the question. Do NOT hallucinate or add information not in the snippets.\n\n"
+        "Rules:\n"
+        "1. If the snippets don’t answer the question, respond with:\n"
+        "   \"I don't know based on the provided snippets.\"\n"
+        "2. Cite each statement with the snippet number in brackets, e.g. [1], [2].\n"
+        "3. Structure your output in three parts:\n"
+        "   1) Step-by-step identification of relevant info\n"
+        "   2) A short summary of findings\n"
+        "   3) Final concise answer with citations\n\n"
         "Question: {question}\n\n"
-        "Snippets:\n{snips}\n\n"
-        "Answer:"
+        "Web Snippets:\n"
+        "{snips}\n\n"
+        "Begin your reasoning and answer:"
     )
 )
 
@@ -139,7 +163,7 @@ def process_net(q: str) -> str:
 
     # Run the LLM pipeline
     try:
-        return net_chain.invoke({"question": q, "snips": snips})
+        return net_chain.invoke({"question": q, "snips": snips}).content
     except Exception as e:
         logger.error("Net chain error: %s", e)
         return "Failed to generate web-based answer."
@@ -303,9 +327,15 @@ def process_papers(job_id: str, question: str, dataset_path: str) -> str:
 _ROUTER_PROMPT = PromptTemplate(
     input_variables=["question"],
     template=(
-        "You are a routing assistant. Select a comma-separated subset of: "
-        "PAPERS, GUIDELINES, NET\nReturn only the list, no extra text.\n\n"
-        "Question: {question}\nAnswer:"
+        "You are a routing assistant. Based on the user's question, choose the most "
+        "appropriate sources from: PAPERS, GUIDELINES, NET.\n\n"
+        "Rules:\n"
+        "1. Include PAPERS for research-based evidence.\n"
+        "2. Include GUIDELINES for official recommendations.\n"
+        "3. Include NET for the latest web-based context.\n"
+        "4. Always choose at least one; if unsure, default to PAPERS.\n\n"
+        "Question: {question}\n"
+        "Answer with a comma-separated list of choices (uppercase), no extra text."
     )
 )
 
@@ -315,7 +345,7 @@ def choose_sources(question: str) -> List[str]:
     if LANGCHAIN_AVAILABLE and router_chain is not None:
         try:
             out = router_chain.invoke({"question": question})
-            picks = [x.strip().lower() for x in out.split(",")]
+            picks = [x.strip().lower() for x in out.content.split(",")]
             valid = [x for x in picks if x in {"papers", "guidelines", "net"}]
             if valid:
                 return valid
@@ -391,7 +421,7 @@ def worker(job_id: str, question: str, data_path: str):
     else:
         combined = "\n\n".join(parts)
         final = (
-            synth_chain.invoke({"partials": combined})
+            synth_chain.invoke({"partials": combined}).content
             if LANGCHAIN_AVAILABLE
             else combined
         )
