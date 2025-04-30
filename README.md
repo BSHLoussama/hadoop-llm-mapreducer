@@ -117,11 +117,7 @@ python dataset/scrapping/pbmed_scraper_psy.py \
 - Parses XML abstracts via `BeautifulSoup`  
 - Outputs `dataset/scrapping/anxiety_papers.json`  
 
-### Tree Generation Utility
-```bash
-python generate_tree.py
-```
-Produces:
+### MongoDB structure
 - `dataset/data_ingestion/db_checkout/parent_child_counts.json`  
 - `dataset/data_ingestion/db_checkout/parents_with_first_child.json`  
 
