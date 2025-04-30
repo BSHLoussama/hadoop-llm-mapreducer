@@ -1,30 +1,36 @@
 <p align="center">
-  <a href="presentation.pptx">
+  <a href="presentation.pptx" style="margin: 0 20px; text-align: center;">
     <img
-      src="https://img.icons8.com/color/128/000000/powerpoint.png"
-      width="200"
-      alt="Presentation PPTX"
+      src="https://img.icons8.com/color/150/000000/microsoft-powerpoint-2019.png"
+      width="150"
+      alt="Download Presentation (PPTX)"
     /><br/>
-    <strong>Download Presentation (PPTX)</strong>
+    <strong>Download<br/>Presentation</strong>
   </a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="rapport.pdf">
+  <a href="rapport.pdf" style="margin: 0 20px; text-align: center;">
     <img
-      src="https://img.icons8.com/color/128/000000/pdf.png"
-      width="200"
-      alt="Written Report PDF"
+      src="https://img.icons8.com/color/150/000000/pdf.png"
+      width="150"
+      alt="Download Written Report (PDF)"
     /><br/>
-    <strong>Download Written Report (PDF)</strong>
+    <strong>Download<br/>Written Report</strong>
   </a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://drive.google.com/drive/folders/1n_rqpt91Dw4oS678zjMjuwLsikuRr6J4?usp=sharing">
+  <a href="https://drive.google.com/drive/folders/1n_rqpt91Dw4oS678zjMjuwLsikuRr6J4?usp=sharing" style="margin: 0 20px; text-align: center;">
     <img
-      src="https://img.icons8.com/fluent/128/000000/video.png"
-      width="200"
-      alt="Demo Video"
+      src="https://img.icons8.com/fluent/150/000000/video.png"
+      width="150"
+      alt="Watch Demo Video"
     /><br/>
-    <strong>Watch Demo Video</strong>
+    <strong>Watch<br/>Demo Video</strong>
   </a>
+</p>
+
+<p align="center">
+  <img
+    src="assets/architecture.png"
+    alt="System Architecture"
+    width="800"
+  />
 </p>
 
 ---
