@@ -243,10 +243,11 @@ See `requirements.txt` for:
 This project is licensed under the MIT License. See [LICENSE](LICENSE).
 
 ## Author & Contact
-**Your Name**  
 ### GitHub & Email: 
+**Oussama BOUSSAHLA**  
 - [@BSHLoussama](https://github.com/BSHLoussama)
-- mokeddemsouhil968@gmail.com 
-
-- [@Souhil301](https://github.com/Souhil301)  
 - oussamaboussahla2017@gmail.com 
+
+**MOKEDEM Souhil** 
+- [@Souhil301](https://github.com/Souhil301)  
+- mokeddemsouhil968@gmail.com 
