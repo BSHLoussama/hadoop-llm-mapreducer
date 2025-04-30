@@ -63,8 +63,8 @@ Combines:
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8+  
-- Java 11+  
+- Python  < 11.x
+- Java 8 | 11
 - Hadoop 3.x (HDFS)  
 - Spark 3.x  
 - MongoDB 4.x+  
