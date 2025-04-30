@@ -1,39 +1,6 @@
-
-<div align="center">
-  <a href="presentation.pptx"
-     style="display:inline-block; margin:0 40px; text-align:center;">
-    <img
-      src="https://img.icons8.com/color/150/000000/microsoft-powerpoint-2019.png"
-      width="150"
-      alt="Download Presentation (PPTX)" /><br/>
-    <strong>Download Presentation</strong>
-  </a>
-  <a href="rapport.pdf"
-     style="display:inline-block; margin:0 40px; text-align:center;">
-    <img
-      src="https://img.icons8.com/color/150/000000/pdf.png"
-      width="150"
-      alt="Download Written Report (PDF)" /><br/>
-    <strong>Download Written Report</strong>
-  </a>
-  <a href="https://drive.google.com/drive/folders/1n_rqpt91Dw4oS678zjMjuwLsikuRr6J4?usp=sharing"
-     style="display:inline-block; margin:0 40px; text-align:center;">
-    <img
-      src="https://img.icons8.com/fluent/150/000000/video.png"
-      width="150"
-      alt="Watch Demo Video" /><br/>
-    <strong>Watch Demo Video</strong>
-  </a>
-</div>
-
-<div align="center">
-  <img
-    src="assets/architecture.png"
-    alt="System Architecture"
-    width="800"
-  />
-</div>
----
+| [<img src="https://img.icons8.com/color/150/000000/microsoft-powerpoint-2019.png" width="150"/>](presentation.pptx) | [<img src="https://img.icons8.com/color/150/000000/pdf.png" width="150"/>](rapport.pdf) | [<img src="https://img.icons8.com/fluent/150/000000/video.png" width="150"/>](https://drive.google.com/drive/folders/1n_rqpt91Dw4oS678zjMjuwLsikuRr6J4?usp=sharing) |
+|:--:|:--:|:--:|
+| **Download Presentation** | **Download Written Report** | **Watch Demo Video** |
 
 # Anxiety QA Platform
 
