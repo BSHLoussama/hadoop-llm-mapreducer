@@ -52,24 +52,26 @@ Combines:
   - Streamlit app with dataset info, submission form, polling  
 
 ### Architecture
+
 ```mermaid
 graph TD
   subgraph UI
     A[Streamlit Frontend]
   end
+
   subgraph API
     B[FastAPI Backend]
-    B --> C[MapReduce (PySpark)]
+    B --> C["MapReduce (PySpark)"]
     B --> D[MongoDB Guidelines]
-    B --> E[DuckDuckGo Search]
-    C --> F[HDFS / Local JSON]
+    B --> E[DuckDuckGo Search"]
+    C --> F["HDFS / Local JSON"]
     D --> G[FAISS Index]
     E --> H[Web Snippets]
     C & G & H --> I[LLM Synthesis]
     I --> B
   end
+
   A --> B
-```
 
 ### Getting Started
 
