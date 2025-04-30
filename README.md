@@ -179,7 +179,6 @@ FD-Project/
 │   └── scrapping/
 │       ├── anxiety_papers.json
 │       └── pbmed_scraper_psy.py
-├── generate_tree.py               # Tree-generation utility
 ├── parent_child_counts.json       # Sample counts output (possibly redundant)
 ├── parent_with_first_child.json   # Sample first-child output (possibly redundant)
 ├── presentation.pptx              # Slides
