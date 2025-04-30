@@ -1,4 +1,3 @@
-```markdown
 ### Anxiety QA Platform
 
 #### Table of Contents
@@ -256,4 +255,3 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE).
 **Your Name**  
 GitHub: [@BSHLoussama](https://github.com/BSHLoussama)  
 Email: oussamaboussahla2017@gmail.com  
-```
