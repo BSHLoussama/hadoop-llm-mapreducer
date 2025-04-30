@@ -12,5 +12,6 @@ __pycache__/
 Thumbs.db
 
 # Ignore other files
-bio_qa.py
 test_mongoDB.py
+generate_tree.py
+my_structure.txt

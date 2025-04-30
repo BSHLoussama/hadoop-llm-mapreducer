@@ -167,23 +167,33 @@ streamlit run streamlit_app.py
 ### Directory Structure
 ```text
 FD-Project/
-├── anxiety_qa_langchain.py      # CLI Spark + LangChain QA
-├── app.py                       # FastAPI backend
+├── anxiety_qa_langchain.py        # CLI Spark + LangChain QA
+├── app.py                         # FastAPI backend
 ├── dataset/
-│   ├── anxiety_papers.json      # PubMed JSON dump
-│   └── data_ingestion/
-│       ├── guidelines/          # PDF files
-│       ├── guidelines_catalogue.json
-│       ├── ingest_anxiety_guidelines.py
+│   ├── data_ingestion/
+│   │   ├── db_checkout/
+│   │   │   ├── MondoDB_architecture.json
+│   │   │   ├── child_count.py
+│   │   │   ├── first_child.py
+│   │   │   ├── parent_child_counts.json
+│   │   │   └── parents_with_first_child.json
+│   │   ├── guidelines_catalogue.json
+│   │   ├── guidelines_source/
+│   │   │   ├── NICE_CG159_Social_Anxiety_Disorder.pdf
+│   │   │   ├── NICE_Guideline_CG113_Generalised_anxiety_disorder_and_panic_disorder_in_adults_m.pdf
+│   │   │   └── WHO_mhGAP_Intervention_Guide_v2.0.pdf
+│   │   └── ingest_anxiety_guidelines.py
+│   └── scrapping/
+│       ├── anxiety_papers.json
 │       └── pbmed_scraper_psy.py
-├── generate_tree.py             # Tree-generation utility
-├── parent_child_counts.json     # Sample counts output
-├── parent_with_first_child.json # Sample first-child output
-├── presentation.pptx            # Slides
-├── rapport.pdf                  # Written report
-├── requirements.txt             # Python deps
-├── results/                     # JSON results per job
-└── streamlit_app.py             # Streamlit frontend
+├── generate_tree.py               # Tree-generation utility
+├── parent_child_counts.json       # Sample counts output (possibly redundant with db_checkout)
+├── parent_with_first_child.json   # Sample first-child output (possibly redundant with db_checkout)
+├── presentation.pptx              # Slides
+├── rapport.pdf                    # Written report
+├── requirements.txt               # Python dependencies
+├── results/                       # JSON results per job
+└── streamlit_app.py               # Streamlit frontend
 ```
 
 ### Data Formats

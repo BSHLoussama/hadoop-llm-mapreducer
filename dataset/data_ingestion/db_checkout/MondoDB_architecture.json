@@ -1,0 +1,59 @@
+{
+   "database": "anxiety",
+   "collections": [
+     {
+       "name": "guidelines",
+       "indexes": [
+         {
+           "name": "slug_parent_uni",
+           "key": { "slug": 1, "parent_id": 1 },
+           "unique": true,
+           "partialFilterExpression": { "doc_level": "parent" }
+         },
+         {
+           "name": "slug_child_uni",
+           "key": { "slug": 1, "child_id": 1 },
+           "unique": true,
+           "partialFilterExpression": { "doc_level": "child" }
+         }
+       ],
+       "documents": [
+         {
+           "_id": "6806e8e20f31122569f0df11",
+           "title": "NICE Guideline CG113: Generalised anxiety disorder and panic disorder in adults (management)",
+           "url": "https://www.nice.org.uk/guidance/cg113/resources/generalised-anxiety-disorder-and-panic-disorder-in-adults-management-pdf-35109387756997",
+           "source": "NICE",
+           "year": 2011,
+           "disease": "GAD, Panic Disorder",
+           "slug": "www.nice.org.uk/guidance/cg113/resources/generalised-anxiety-disorder-and-panic-disorder-in-adults-management-pdf-35109387756997",
+           "text": "Generalised anxiety\ndisorder and panic\ndisorder in adults: management\nClinical guideline\nPublished: 26 January 2011\nLast updated: 15 June 2020\n...(up to ~2000 chars)",
+           "doc_level": "parent",
+           "parent_id": "parent_0",
+           "ingested_at": "2025-04-22T00:54:58.151Z"
+         },
+         {
+           "_id": "6806e8e20f31122569f0df12",
+           "title": "NICE Guideline CG113: Generalised anxiety disorder and panic disorder in adults (management)",
+           "url": "https://www.nice.org.uk/guidance/cg113/resources/generalised-anxiety-disorder-and-panic-disorder-in-adults-management-pdf-35109387756997",
+           "source": "NICE",
+           "year": 2011,
+           "disease": "GAD, Panic Disorder",
+           "slug": "www.nice.org.uk/guidance/cg113/resources/generalised-anxiety-disorder-and-panic-disorder-in-adults-management-pdf-35109387756997",
+           "text": "Generalised anxiety\ndisorder and panic\ndisorder in adults: management\nClinical guideline\n…(up to ~500 chars)…",
+           "embedding": [
+            "<Float32[384]>",
+             0.06208774074912071,
+             0.009584881365299225,
+             0.09117584675550461,
+             0.06763511896133423,
+             -0.00950778741389513
+           ],
+           "doc_level": "child",
+           "parent_id": "parent_0",
+           "child_id": "child_0_0",
+           "ingested_at": "2025-04-22T00:54:58.159Z"
+         }
+       ]
+     }
+   ]
+ }
