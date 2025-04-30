@@ -1,24 +1,28 @@
-
 <p align="center">
   <a href="presentation.pptx">
-    <img src="https://img.icons8.com/color/128/000000/powerpoint.png" width="128" alt="Presentation PPTX"/>
-    <br/>
+    <img
+      src="https://img.icons8.com/color/128/000000/powerpoint.png"
+      width="200"
+      alt="Presentation PPTX"
+    /><br/>
     <strong>Download Presentation (PPTX)</strong>
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="rapport.pdf">
-    <img src="https://img.icons8.com/color/128/000000/pdf.png" width="128" alt="Written Report PDF"/>
-    <br/>
+    <img
+      src="https://img.icons8.com/color/128/000000/pdf.png"
+      width="200"
+      alt="Written Report PDF"
+    /><br/>
     <strong>Download Written Report (PDF)</strong>
   </a>
-</p>
-
-
-
-<p align="center">
+  &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://drive.google.com/drive/folders/1n_rqpt91Dw4oS678zjMjuwLsikuRr6J4?usp=sharing">
-    <img src="https://img.icons8.com/fluent/128/000000/video.png" width="128" alt="Demo Video"/>
-    <br/>
+    <img
+      src="https://img.icons8.com/fluent/128/000000/video.png"
+      width="200"
+      alt="Demo Video"
+    /><br/>
     <strong>Watch Demo Video</strong>
   </a>
 </p>
