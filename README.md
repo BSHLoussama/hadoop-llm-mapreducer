@@ -53,51 +53,56 @@ Combines:
 
 ### Architecture
 
+
+=======
 ```mermaid
 graph TD
   subgraph UI
     A[Streamlit Frontend]
   end
 
+=======
   subgraph API
     B[FastAPI Backend]
-    B --> C["MapReduce (PySpark)"]
+    B --> C[MapReduce (PySpark)]
     B --> D[MongoDB Guidelines]
-    B --> E[DuckDuckGo Search"]
-    C --> F["HDFS / Local JSON"]
+    B --> E[DuckDuckGo Search]
+    C --> F[HDFS / Local JSON]
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
     D --> G[FAISS Index]
     E --> H[Web Snippets]
     C & G & H --> I[LLM Synthesis]
     I --> B
   end
 
+=======
   A --> B
 
-### Getting Started
-```
-
-#### Prerequisites
-- Python 3.8+  
-- Java 11+  
-- Hadoop 3.x (HDFS)  
-- Spark 3.x  
-- MongoDB 4.x+  
-- (Optional) Ollama for local LLMs  
-- `.env` file with API keys & paths  
-
-#### Installation
-```bash
+Getting Started
+Prerequisites
+Python 3.8+
+Java 11+
+Hadoop 3.x (HDFS)
+Spark 3.x
+MongoDB 4.x+
+(Optional) Ollama for local LLMs
+.env file with API keys & paths
+Installation
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
 git clone https://github.com/your-org/FD-Project.git
 cd FD-Project
 python -m venv venv
 source venv/bin/activate    # Windows: venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
-```
 
-#### Configuration
-Create a file named `.env` in the project root:
-```dotenv
+=======
+
+Configuration
+
+Create a file named .env in the project root:
+
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
 MONGO_URI=mongodb://localhost:27017
 NCBI_API_KEY=your_pubmed_api_key
 HADOOP_HOME=/path/to/hadoop
@@ -105,101 +110,93 @@ SPARK_HOME=/path/to/spark
 JAVA_HOME=/path/to/java
 OLLAMA_HOST=localhost
 OLLAMA_PORT=11434
-```
 
-### Data Ingestion
+=======
 
-#### Clinical Guidelines
-```bash
+Data Ingestion
+Clinical Guidelines
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
 python dataset/data_ingestion/ingest_anxiety_guidelines.py \
   --mongo "$MONGO_URI" \
   --db anxiety --col guidelines \
   --folder dataset/guidelines
-```
-- Downloads NICE CG159, CG113, WHO mhGAP PDFs  
-- Extracts text via `pdfminer` or `pypdf`  
-- Splits into parent (2 000 chars) & child (500 chars) chunks  
-- Computes embeddings with `sentence-transformers/all-MiniLM-L6-v2`  
-- Upserts into MongoDB with partial unique indexes  
 
-#### PubMed Papers
-```bash
+=======
+
+Downloads NICE CG159, CG113, WHO mhGAP PDFs
+Extracts text via pdfminer or pypdf
+Splits into parent (2 000 chars) & child (500 chars) chunks
+Computes embeddings with sentence-transformers/all-MiniLM-L6-v2
+Upserts into MongoDB with partial unique indexes
+PubMed Papers
 python dataset/data_ingestion/pbmed_scraper_psy.py \
   --max-sota 500 --max-legacy 350
-```
-- Queries Entrez `ESearch` & `EFetch`  
-- Parses XML abstracts via `BeautifulSoup`  
-- Outputs `dataset/anxiety_papers.json`  
+
+Queries Entrez ESearch & EFetch
+Parses XML abstracts via BeautifulSoup
+Outputs dataset/anxiety_papers.json
+Tree Generation Utility
+python generate_tree.py
 
 
-### Usage
+Produces:
 
-#### CLI Q&A
-```bash
+parent_child_counts.json (child counts per parent chunk)
+parent_with_first_child.json (samples of first-child embeddings)
+Usage
+CLI Q&A
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
 python anxiety_qa_langchain.py \
   --job_id 12345 \
   --question_file path/to/question.txt \
   --dataset_path dataset/anxiety_papers.json
-```
-- MapReduce to retrieve top-10 abstracts  
-- LangChain + Ollama/OpenAI for answer  
-- Fallback template if LLM fails  
-- Writes `results/results_<job_id>.json`  
 
-#### FastAPI Backend
-```bash
+=======
+
+MapReduce to retrieve top-10 abstracts
+LangChain + Ollama/OpenAI for answer
+Fallback template if LLM fails
+Writes results/results_<job_id>.json
+FastAPI Backend
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
-```
-- `POST /submit_question/` → `{ job_id, status }`  
-- `GET /job_status/{job_id}` → result or status  
-- `GET /recent_jobs/` → last 10 jobs  
-- `GET /dataset_info` → HDFS dataset metadata  
 
-#### Streamlit Frontend
-```bash
+POST /submit_question/ → { job_id, status }
+GET /job_status/{job_id} → result or status
+GET /recent_jobs/ → last 10 jobs
+GET /dataset_info → HDFS dataset metadata
+Streamlit Frontend
 streamlit run streamlit_app.py
-```
-- Interactive Q&A UI  
-- Sidebar shows HDFS dataset status  
-- Polls backend for job completion  
-- Displays question, answer, timing, citations  
 
-### Directory Structure
-```text
+Interactive Q&A UI
+Sidebar shows HDFS dataset status
+Polls backend for job completion
+Displays question, answer, timing, citations
+Directory Structure
 FD-Project/
-├── anxiety_qa_langchain.py        # CLI Spark + LangChain QA
-├── app.py                         # FastAPI backend
+├── anxiety_qa_langchain.py      # CLI Spark + LangChain QA
+├── app.py                       # FastAPI backend
 ├── dataset/
-│   ├── data_ingestion/
-│   │   ├── db_checkout/
-│   │   │   ├── MondoDB_architecture.json
-│   │   │   ├── child_count.py
-│   │   │   ├── first_child.py
-│   │   │   ├── parent_child_counts.json
-│   │   │   └── parents_with_first_child.json
-│   │   ├── guidelines_catalogue.json
-│   │   ├── guidelines_source/
-│   │   │   ├── NICE_CG159_Social_Anxiety_Disorder.pdf
-│   │   │   ├── NICE_Guideline_CG113_Generalised_anxiety_disorder_and_panic_disorder_in_adults_m.pdf
-│   │   │   └── WHO_mhGAP_Intervention_Guide_v2.0.pdf
-│   │   └── ingest_anxiety_guidelines.py
-│   └── scrapping/
-│       ├── anxiety_papers.json
+│   ├── anxiety_papers.json      # PubMed JSON dump
+│   └── data_ingestion/
+│       ├── guidelines/          # PDF files
+│       ├── guidelines_catalogue.json
+│       ├── ingest_anxiety_guidelines.py
 │       └── pbmed_scraper_psy.py
-├── generate_tree.py               # Tree-generation utility
-├── parent_child_counts.json       # Sample counts output (possibly redundant with db_checkout)
-├── parent_with_first_child.json   # Sample first-child output (possibly redundant with db_checkout)
-├── presentation.pptx              # Slides
-├── rapport.pdf                    # Written report
-├── requirements.txt               # Python dependencies
-├── results/                       # JSON results per job
-└── streamlit_app.py               # Streamlit frontend
-```
+├── generate_tree.py             # Tree-generation utility
+├── parent_child_counts.json     # Sample counts output
+├── parent_with_first_child.json # Sample first-child output
+├── presentation.pptx            # Slides
+├── rapport.pdf                  # Written report
+├── requirements.txt             # Python deps
+├── results/                     # JSON results per job
+└── streamlit_app.py             # Streamlit frontend
 
-### Data Formats
-**`dataset/anxiety_papers.json`**  
+Data Formats
+
+dataset/anxiety_papers.json
 JSON array of PubMed articles:
-```json
+
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
 [
   {
     "pmid": "12345678",
@@ -211,53 +208,59 @@ JSON array of PubMed articles:
   }
   …
 ]
-```
 
-**MongoDB guidelines collection**  
-Documents with `doc_level`: `"parent"` or `"child"`, plus embeddings for children.
+=======
 
-**Results files**  
-`results/results_<job_id>.json`:
-```json
+
+MongoDB guidelines collection
+Documents with doc_level: "parent" or "child", plus embeddings for children.
+
+Results files
+results/results_<job_id>.json:
+
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
 {
   "question": "...",
   "answer": "...",
   "error": null,
   "timestamp": "2025-04-30T12:34:56"
 }
-```
 
-### Dependencies
-See `requirements.txt` for:
-- `fastapi`
-- `uvicorn`
-- `streamlit`
-- `pyspark`
-- `hadoop-client`
-- `pymongo`
-- `sentence-transformers`
-- `langchain`
-- `langchain-ollama`
-- `beautifulsoup4`
-- `pdfminer.six`
-- `pypdf`
-- `faiss-cpu`
-- `duckduckgo-search`
-- `python-dotenv`
+=======
 
-### Contributing
-1. Fork & clone the repository  
-2. Create a feature branch:
-   ```bash
-   git checkout -b feat/xyz
-   ```
-3. Install & run tests (if any)  
-4. Submit a PR with a clear description & tests  
+Dependencies
 
-### License
-This project is licensed under the MIT License. See [LICENSE](LICENSE).
+See requirements.txt for:
 
-### Author & Contact
-**Your Name**  
-GitHub: [@BSHLoussama](https://github.com/BSHLoussama)  
-Email: oussamaboussahla2017@gmail.com  
+fastapi
+uvicorn
+streamlit
+pyspark
+hadoop-client
+pymongo
+sentence-transformers
+langchain
+langchain-ollama
+beautifulsoup4
+pdfminer.six
+pypdf
+faiss-cpu
+duckduckgo-search
+python-dotenv
+Contributing
+Fork & clone the repository
+Create a feature branch:
+git checkout -b feat/xyz
+
+Install & run tests (if any)
+Submit a PR with a clear description & tests
+License
+
+This project is licensed under the MIT License. See LICENSE.
+
+Author & Contact
+
+Your Name
+GitHub: @BSHLoussama
+Email: oussamaboussahla2017@gmail.com
+>>>>>>> c27b821532d9effca40d690a9ed055463e5b30c5
