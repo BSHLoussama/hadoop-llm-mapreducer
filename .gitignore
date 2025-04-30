@@ -3,10 +3,8 @@
 
 # Ignore compiled Python files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-__pycache__
+*.py[cod]
+
 
 # Ignore system files
 .DS_Store
