@@ -74,6 +74,7 @@ graph TD
   A --> B
 
 ### Getting Started
+```
 
 #### Prerequisites
 - Python 3.8+  
@@ -130,13 +131,6 @@ python dataset/data_ingestion/pbmed_scraper_psy.py \
 - Parses XML abstracts via `BeautifulSoup`  
 - Outputs `dataset/anxiety_papers.json`  
 
-#### Tree Generation Utility
-```bash
-python generate_tree.py
-```
-Produces:
-- `parent_child_counts.json` (child counts per parent chunk)  
-- `parent_with_first_child.json` (samples of first-child embeddings)  
 
 ### Usage
 
